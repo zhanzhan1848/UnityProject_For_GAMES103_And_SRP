@@ -75,7 +75,7 @@ Shader "ZZRenderer/BlinnPhongSpecular"
                 float3 positionWS = input.positionWS;
                 float3 normalWS = input.normalWS;
                 half4 color = BlinnPhongLight(positionWS, normalWS, _Shininess, diffuseColor + diffuseMapColor, _SpecularColor);
-                return (1 - GetMainLightShadowAtten(positionWS, normalWS)) * color;
+                return (1 - GetMainLightShadowAtten(positionWS, normalWS)) * color + _XAmbientColor;
             }
             ENDHLSL
         }

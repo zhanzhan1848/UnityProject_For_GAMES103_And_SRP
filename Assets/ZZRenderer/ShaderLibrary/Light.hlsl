@@ -22,7 +22,7 @@ half4 BlinnPhongSpecular(float3 viewDir, float3 normal, float shininess)
 half4 BlinnPhongLight(float3 positionWS, float3 normalWS, float shininess, half4 diffuseColor, half4 specularColor)
 {
 	float3 viewDir = normalize(_WorldSpaceCameraPos - positionWS);
-	return _XAmbientColor + LabmertDiffuse(normalWS) * diffuseColor + BlinnPhongSpecular(viewDir, normalWS, shininess) * specularColor;
+	return LabmertDiffuse(normalWS) * diffuseColor + BlinnPhongSpecular(viewDir, normalWS, shininess) * specularColor;
 	// return LabmertDiffuse(normalWS) * diffuseColor + BlinnPhongSpecular(viewDir, normalWS, shininess) * specularColor;
 }
 

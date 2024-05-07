@@ -165,31 +165,172 @@ public class wave_motion : MonoBehaviour
 
 		//Step 4: Water->Block coupling.
 		//More TODO here.
+
+
+		// Step 1
+		for(int j = 0; j < size; j++)
+			for(int i = 0; i < size; i++)
+			{
+				new_h[i, j] = h[i, j] + (h[i, j] - old_h[i, j]) * damping + (h[Mathf.Clamp(i - 1, 0, size - 1), j] +
+                                                                            h[Mathf.Clamp(i + 1, 0, size - 1), j] + 
+																			h[i, Mathf.Clamp(j - 1, 0, size - 1)] +
+                                                                            h[i, Mathf.Clamp(j + 1, 0, size - 1)] -
+																			4 * h[i, j]) * rate;
+			}
+
+		// Step 2
+		var block1 = GameObject.Find("Block");
+		var block1_collider = block1.GetComponent<Collider>();
+		var block1_bounds = block1_collider.bounds;
+
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+            {
+				if ((i * 0.1f - size * 0.05f) > (block1_bounds.center.x - block1_bounds.extents.x) &&
+                    (i * 0.1f - size * 0.05f) < (block1_bounds.center.x + block1_bounds.extents.x) &&
+                    (j * 0.1f - size * 0.05f) > (block1_bounds.center.z - block1_bounds.extents.z) &&
+                    (j * 0.1f - size * 0.05f) < (block1_bounds.center.z + block1_bounds.extents.z))
+				{
+					cg_mask[j, i] = true;
+					low_h[j, i] = block1_bounds.center.y - block1_bounds.extents.y;
+					b[j, i] = (new_h[j, i] - low_h[j, i]) / rate;
+                }
+            }
+		Conjugate_Gradient(cg_mask, b, vh, 0, size, 0, size);
+        for (int j = 0; j < size; j++)
+            for (int i = 0; i < size; i++)
+            {
+                new_h[i, j] += (vh[Mathf.Clamp(i - 1, 0, size - 1), j] + vh[Mathf.Clamp(i + 1, 0, size - 1), j] +
+                                vh[i, Mathf.Clamp(j - 1, 0, size - 1)] + vh[i, Mathf.Clamp(j + 1, 0, size - 1)] - 4 * vh[i, j]) * rate * gamma;
+            }
+
+        var block2 = GameObject.Find("Cube");
+        var block2_collider = block2.GetComponent<Collider>();
+        var block2_bounds = block2_collider.bounds;
+
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+            {
+                if ((i * 0.1f - size * 0.05f) > (block2_bounds.center.x - block2_bounds.extents.x) &&
+                    (i * 0.1f - size * 0.05f) < (block2_bounds.center.x + block2_bounds.extents.x) &&
+                    (j * 0.1f - size * 0.05f) > (block2_bounds.center.z - block2_bounds.extents.z) &&
+                    (j * 0.1f - size * 0.05f) < (block2_bounds.center.z + block2_bounds.extents.z))
+                {
+                    cg_mask[j, i] = true;
+                    low_h[j, i] = block2_bounds.center.y - block2_bounds.extents.y;
+                    b[j, i] = (new_h[j, i] - low_h[j, i]) / rate;
+                }
+            }
+        Conjugate_Gradient(cg_mask, b, vh, 0, size, 0, size);
+
+		for (int j = 0; j < size; j++)
+			for (int i = 0; i < size; i++)
+			{
+				new_h[i, j] += (vh[Mathf.Clamp(i - 1, 0, size - 1), j] + vh[Mathf.Clamp(i + 1, 0, size - 1), j] +
+								vh[i, Mathf.Clamp(j - 1, 0, size - 1)] + vh[i, Mathf.Clamp(j + 1, 0, size - 1)] - 4 * vh[i, j]) * rate * gamma;
+			}
+
+		// Step 3
+		// old_h = h;
+		// h = new_h;
 	}
 	
 
 	// Update is called once per frame
 	void Update () 
 	{
-		Mesh mesh = GetComponent<MeshFilter> ().mesh;
+		Mesh mesh = GetComponent<MeshFilter>().mesh;
 		Vector3[] X    = mesh.vertices;
 		float[,] new_h = new float[size, size];
 		float[,] h     = new float[size, size];
 
 		//TODO: Load X.y into h.
+		for(int i = 0; i < size;  i++)
+			for (int j = 0; j < size; j++)
+			{
+				h[j, i] = X[i * size + j].y;
+			}
 
 		if (Input.GetKeyDown ("r")) 
 		{
 			//TODO: Add random water.
+			int ri = Random.Range (0, size - 1);
+			int rj = Random.Range (0, size - 1);
+			float r = Random.Range (0.1f, 1.0f);
+			float quat_r = r * 0.25f;
+			float t_r = r * 0.33f;
+			float half_r = r * 0.5f;
+			h[rj, ri] += r;
+			if(ri == 0 || rj == 0 || ri == size - 1 || rj == size - 1)
+			{
+				if(ri == rj)
+				{
+					if (ri == 0) 
+					{
+                        h[rj, ri + 1] -= half_r;
+                        h[rj + 1, ri] -= half_r;
+                    }
+					else
+					{
+                        h[rj, ri - 1] -= half_r;
+                        h[rj - 1, ri] -= half_r;
+                    }
+				}
+				else
+				{
+					if(ri == 0)
+					{
+                        h[rj - 1, ri] -= t_r;
+                        h[rj + 1, ri] -= t_r;
+                        h[rj, ri + 1] -= t_r;
+                    }
+					else if(ri == size)
+					{
+                        h[rj - 1, ri] -= t_r;
+                        h[rj + 1, ri] -= t_r;
+                        h[rj, ri - 1] -= t_r;
+                    }
+					else if(rj == 0)
+					{
+                        h[rj + 1, ri] -= t_r;
+                        h[rj, ri - 1] -= t_r;
+                        h[rj, ri + 1] -= t_r;
+                    }
+					else
+					{
+						h[rj - 1, ri] -= t_r;
+                        h[rj, ri - 1] -= t_r;
+                        h[rj, ri + 1] -= t_r;
+                    }
+				}
+			}
+			else
+			{
+                h[rj - 1, ri] -= quat_r;
+                h[rj + 1, ri] -= quat_r;
+                h[rj, ri - 1] -= quat_r;
+                h[rj, ri + 1] -= quat_r;
+            }
+			// Debug.Log("random water add at {" + ri.ToString() + "," + rj.ToString() + "} with" + r.ToString() + " height");
 		}
+
+		// Debug.Log(b[0, 5]);
 	
 		for(int l=0; l<8; l++)
 		{
 			Shallow_Wave(old_h, h, new_h);
 		}
+		old_h = h;
+		h = new_h;
 
-		//TODO: Store h back into X.y and recalculate normal.
+        //TODO: Store h back into X.y and recalculate normal.
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+            {
+                X[i * size + j].y = h[j, i];
+            }
+		mesh.vertices = X;
+		mesh.RecalculateNormals();
 
-		
-	}
+    }
 }

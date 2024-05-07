@@ -1,0 +1,14 @@
+#ifndef ZZ_SHADOW_INPUT_INCLUDED
+#define ZZ_SHADOW_INPUT_INCLUDED
+
+#define MAX_CASCADESHADOW_COUNT 4
+
+CBUFFER_START(XShadow)
+
+float4x4 _XWorldToMainLightCascadeShadowMapSpaceMatrices[MAX_CASCADESHADOW_COUNT];
+
+float4 _XCascadeCullingSpheres[MAX_CASCADESHADOW_COUNT];
+
+CBUFFER_END
+
+#endif
