@@ -22,4 +22,4 @@ The shadow result:(Shader has some bug, so shadow is wrong)
 
 
 The shallow wave result:(May be hard to see wave because of shader's bug)
-![image](https://github.com/zhanzhan1848/UnityProject_For_GAMES103_And_SRP/blob/Shallow-wave-and-cascade-shadow-map/result.git)
+![image](https://github.com/zhanzhan1848/UnityProject_For_GAMES103_And_SRP/blob/Shallow-wave-and-cascade-shadow-map/result.gif)
